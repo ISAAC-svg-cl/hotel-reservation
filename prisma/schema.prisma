@@ -1,0 +1,181 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             String        @id @default(cuid())
+  name           String?
+  email          String        @unique
+  password       String
+  phone          String?
+  avatar         String?
+  role           String        @default("CUSTOMER") // CUSTOMER, HOTEL_MANAGER, ADMIN
+  managedHotels  Hotel[]       @relation("HotelManager")
+  reservations   Reservation[]
+  reviews        Review[]
+  favorites      Favorite[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([email])
+  @@index([role])
+}
+
+model Hotel {
+  id           String         @id @default(cuid())
+  name         String
+  slug         String         @unique
+  description  String
+  address      String
+  city         String
+  country      String
+  postalCode   String?
+  latitude     Float?
+  longitude    Float?
+  phone        String?
+  email        String?
+  starRating   Int            @default(4)
+  coverImage   String?
+  managerId    String?
+  manager      User?          @relation("HotelManager", fields: [managerId], references: [id], onDelete: SetNull)
+  rooms        Room[]
+  images       HotelImage[]
+  amenities    Amenity[]
+  reviews      Review[]
+  reservations Reservation[]
+  favorites    Favorite[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([slug])
+  @@index([city])
+  @@index([managerId])
+}
+
+model Room {
+  id            String        @id @default(cuid())
+  hotelId       String
+  name          String
+  roomNumber    String?
+  description   String
+  type          String        @default("DOUBLE") // SINGLE, DOUBLE, TWIN, DELUXE, SUITE, FAMILY
+  capacity      Int           @default(2)
+  size          Float         @default(25.0)
+  pricePerNight Float
+  quantity      Int           @default(1)
+  status        String        @default("AVAILABLE") // AVAILABLE, MAINTENANCE, INACTIVE
+  hotel         Hotel         @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  images        RoomImage[]
+  amenities     Amenity[]
+  reservations  Reservation[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([hotelId])
+  @@index([type])
+  @@index([status])
+}
+
+model HotelImage {
+  id        String   @id @default(cuid())
+  hotelId   String
+  url       String
+  alt       String?
+  sortOrder Int      @default(0)
+  isCover   Boolean  @default(false)
+  hotel     Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@index([hotelId])
+}
+
+model RoomImage {
+  id        String   @id @default(cuid())
+  roomId    String
+  url       String
+  alt       String?
+  sortOrder Int      @default(0)
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+}
+
+model Amenity {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  icon      String?
+  hotels    Hotel[]
+  rooms     Room[]
+  createdAt DateTime @default(now())
+}
+
+model Reservation {
+  id                String   @id @default(cuid())
+  reservationNumber String   @unique
+  userId            String
+  hotelId           String
+  roomId            String
+  checkIn           DateTime
+  checkOut          DateTime
+  adults            Int      @default(1)
+  children          Int      @default(0)
+  numberOfRooms     Int      @default(1)
+  pricePerNight     Float
+  numberOfNights    Int
+  subtotal          Float
+  tax               Float
+  total             Float
+  currency          String   @default("USD")
+  status            String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW
+  paymentStatus     String   @default("UNPAID") // UNPAID, PENDING, PAID, REFUNDED
+  guestName         String?
+  guestEmail        String?
+  guestPhone        String?
+  specialRequests   String?
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hotel             Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  room              Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([hotelId])
+  @@index([roomId])
+  @@index([checkIn, checkOut])
+  @@index([reservationNumber])
+}
+
+model Review {
+  id            String   @id @default(cuid())
+  userId        String
+  hotelId       String
+  reservationId String?  @unique
+  rating        Int      @default(5)
+  comment       String
+  status        String   @default("APPROVED") // PENDING, APPROVED, REJECTED
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hotel         Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([hotelId])
+  @@index([status])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  hotelId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hotel     Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, hotelId])
+  @@index([userId])
+  @@index([hotelId])
+}

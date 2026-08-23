@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80" fill="none">
+  <!-- Gradient background optional accent -->
+  <defs>
+    <linearGradient id="novotelGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+  </defs>
+
+  <!-- Stylized Monogram N Icon in badge -->
+  <rect x="6" y="10" width="60" height="60" rx="16" fill="#0f172a" stroke="url(#novotelGold)" stroke-width="2" />
+  <path d="M22 52 V28 L44 52 V28" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="50" cy="22" r="3.5" fill="#f59e0b" />
+
+  <!-- NOVOTEL Text in official bold geometric typography -->
+  <text x="80" y="46" font-family="'Inter', 'Montserrat', -apple-system, sans-serif" font-size="30" font-weight="900" fill="#ffffff" letter-spacing="4">NOVOTEL</text>
+  
+  <!-- LUBUMBASHI subtitle -->
+  <text x="82" y="62" font-family="'Inter', -apple-system, sans-serif" font-size="10" font-weight="700" fill="#f59e0b" letter-spacing="4">LUBUMBASHI &bull; RDC</text>
+</svg>

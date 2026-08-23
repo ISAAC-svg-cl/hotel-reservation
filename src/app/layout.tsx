@@ -1,15 +1,22 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { AuthProvider } from "@/components/providers/AuthProvider";
+import { PwaInstallPrompt } from "@/components/pwa/PwaInstallPrompt";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  themeColor: "#0f172a",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: {
@@ -27,6 +34,22 @@ export const metadata: Metadata = {
     "Hotelia",
   ],
   authors: [{ name: "Hotelia" }],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Hotelia",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: [
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
   openGraph: {
     title: "Novotel Lubumbashi — Réservation en ligne sécurisée",
     description:
@@ -52,8 +75,10 @@ export default function RootLayout({
           <Navbar />
           <main className="flex-grow">{children}</main>
           <Footer />
+          <PwaInstallPrompt />
         </AuthProvider>
       </body>
     </html>
   );
 }
+

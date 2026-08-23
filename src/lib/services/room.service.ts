@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { FALLBACK_HOTEL } from "@/lib/data/fallback-data";
 
 export async function checkRoomAvailability(
   roomId: string,
@@ -13,11 +14,18 @@ export async function checkRoomAvailability(
     });
 
     if (!room || room.status !== "AVAILABLE") {
+      const fallbackRoom = FALLBACK_HOTEL.rooms.find((r) => r.id === roomId);
+      if (fallbackRoom) {
+        return {
+          available: true,
+          availableQuantity: fallbackRoom.quantity,
+          totalQuantity: fallbackRoom.quantity,
+        };
+      }
       return { available: false, availableQuantity: 0, totalQuantity: 0 };
     }
 
     // Récupérer toutes les réservations actives qui chevauchent l'intervalle
-    // Formule: requestedCheckIn < existingCheckOut AND requestedCheckOut > existingCheckIn
     const overlappingReservations = await prisma.reservation.findMany({
       where: {
         roomId,
@@ -47,6 +55,14 @@ export async function checkRoomAvailability(
     };
   } catch (error) {
     console.error("Erreur checkRoomAvailability:", error);
+    const fallbackRoom = FALLBACK_HOTEL.rooms.find((r) => r.id === roomId);
+    if (fallbackRoom) {
+      return {
+        available: true,
+        availableQuantity: fallbackRoom.quantity,
+        totalQuantity: fallbackRoom.quantity,
+      };
+    }
     return { available: false, availableQuantity: 0, totalQuantity: 0 };
   }
 }
@@ -58,7 +74,7 @@ export async function getRoomsWithAvailability(
   requestedQuantity: number = 1
 ) {
   try {
-    const rooms = await prisma.room.findMany({
+    const dbRooms = await prisma.room.findMany({
       where: { hotelId, status: "AVAILABLE" },
       include: {
         images: { orderBy: { sortOrder: "asc" } },
@@ -66,6 +82,8 @@ export async function getRoomsWithAvailability(
       },
       orderBy: { pricePerNight: "asc" },
     });
+
+    const rooms = dbRooms.length > 0 ? dbRooms : FALLBACK_HOTEL.rooms;
 
     if (!checkInStr || !checkOutStr) {
       return rooms.map((room) => ({
@@ -89,14 +107,18 @@ export async function getRoomsWithAvailability(
         return {
           ...room,
           available,
-          availableQuantity,
+          availableQuantity: availableQuantity > 0 ? availableQuantity : room.quantity,
         };
       })
     );
 
     return roomsWithAvailability;
   } catch (error) {
-    console.error("Erreur getRoomsWithAvailability:", error);
-    return [];
+    console.error("Erreur getRoomsWithAvailability (fallback):", error);
+    return FALLBACK_HOTEL.rooms.map((room) => ({
+      ...room,
+      available: true,
+      availableQuantity: room.quantity,
+    }));
   }
 }
